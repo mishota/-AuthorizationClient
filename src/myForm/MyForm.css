@@ -1,0 +1,78 @@
+.form {
+  margin: 0px auto;
+  padding: 20px;
+  max-width: 700px;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: rgb(214, 247, 253);
+  border-radius: 3px;
+}
+
+div {
+  margin-top: 10px;
+}
+
+input,
+textarea {
+  width: 80%;
+  margin-bottom: 10px;
+  border: 1px solid #bdbdbd;
+  transition: box-shadow 0.5s ease-in-out;
+}
+
+input:focus,
+textarea:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 92, 240, 0.25);
+}
+
+.submit {
+  background-color: aqua;
+  height: 30px;
+  font-size: large;
+  margin-top: 20px;
+}
+
+.submit:hover {
+  cursor: pointer;
+}
+
+.choose-image {
+  width: 30%;
+  background-color: aqua;
+}
+
+.block-image {
+  position: relative;
+}
+.block-image-picker {
+  position: absolute;
+  width: 40%;
+  top: -10px;
+  left: 30%;
+  opacity: 0;
+}
+
+.message {
+  color: crimson;
+}
+
+.preview-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-info {
+  position: absolute;
+  bottom: 4px;
+  left: 10%;
+  width: 80%;
+  display: flex;
+  opacity: 0;
+  transition: opacity 1s;
+  background-color: aqua;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-image:hover .preview-info {
+  opacity: 1;
+}
