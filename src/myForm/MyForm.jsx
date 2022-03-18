@@ -17,6 +17,12 @@ function MyForm() {
   const [user, setUser] = useState(initialUser);
   const [message, setMessage] = useState("");
 
+  const messageCreate = (text) => {
+    setMessage(text);
+    setTimeout(() => {
+      setMessage("");
+    }, 2000);
+  };
   const handleChangeInput = (event) => {
     if (
       event.target.name === "img" &&
@@ -24,11 +30,10 @@ function MyForm() {
       event.target.files[0]
     ) {
       if (event.target.files[0].size > 5242880) {
-        setMessage("the image is too large (max-size: 5Mb)");
+        messageCreate("the image is too large (max-size: 5Mb)");
         return;
       }
       let img = event.target.files[0];
-
       setUser({
         ...user,
         img: URL.createObjectURL(img),
@@ -44,7 +49,6 @@ function MyForm() {
       });
       return;
     }
-
     setUser({
       ...user,
       [event.target.name]: event.target.value,
@@ -55,22 +59,16 @@ function MyForm() {
     for (let key in user) {
       if (key !== "file") {
         if (user[key] === "" || user[key] === null) {
-          setMessage(`Please enter your ${key}`);
-          setTimeout(() => {
-            setMessage("");
-          }, 2000);
+          messageCreate(`Please enter your ${key}`);
           return;
         }
       }
     }
-
     const imagePath = await MainFetchApi.uploadFile(user);
-
     if (!imagePath) {
       console.log("imagePath did not create");
       return;
     }
-
     const userDto = {};
     Object.assign(userDto, user);
     userDto.img = imagePath;
@@ -81,10 +79,7 @@ function MyForm() {
 
   const handleFind = async () => {
     if (user.email === "" || user.password === "") {
-      setMessage(`Please enter your email anf password`);
-      setTimeout(() => {
-        setMessage("");
-      }, 2000);
+      messageCreate(`Please enter your email anf password`);
       return;
     } else {
       const foundUser = await MainFetchApi.getUser(user.email, user.password);
@@ -106,7 +101,6 @@ function MyForm() {
   return (
     <div className="form">
       <h2>Registration Form</h2>
-
       <form>
         <div>
           <label>Name:</label>
@@ -155,7 +149,7 @@ function MyForm() {
         <div>
           {user.img !== null && (
             <div className="preview-image">
-              <img src={user.img} />
+              <img src={user.img} alt="" />
               {user.file !== null && (
                 <div className="preview-info">
                   <div>Name: {user.file.name} /</div>
@@ -164,7 +158,6 @@ function MyForm() {
               )}
             </div>
           )}
-
           <div className="block-image">
             <div className="block-image-picker">
               <input
