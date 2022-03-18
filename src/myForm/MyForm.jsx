@@ -23,7 +23,6 @@ function MyForm() {
       event.target.files &&
       event.target.files[0]
     ) {
-      console.warn(event.target.files[0]);
       if (event.target.files[0].size > 5242880) {
         setMessage("the image is too large (max-size: 5Mb)");
         return;
@@ -37,13 +36,15 @@ function MyForm() {
       });
       return;
     }
-
-    if (
-      event.target.name === "text" &&
-      isFinite(event.target.value[event.target.value.length - 1])
-    ) {
+    if (event.target.name === "text") {
+      const newText = event.target.value.replace(/\d/g, "");
+      setUser({
+        ...user,
+        text: newText,
+      });
       return;
     }
+
     setUser({
       ...user,
       [event.target.name]: event.target.value,
@@ -51,9 +52,7 @@ function MyForm() {
   };
 
   const handleSubmit = async (imageForm) => {
-    console.warn(user);
     for (let key in user) {
-      console.warn(user[key]);
       if (key !== "file") {
         if (user[key] === "" || user[key] === null) {
           setMessage(`Please enter your ${key}`);
@@ -68,7 +67,7 @@ function MyForm() {
     const imagePath = await MainFetchApi.uploadFile(user);
 
     if (!imagePath) {
-      console.warn("imagePath did not create");
+      console.log("imagePath did not create");
       return;
     }
 
@@ -76,11 +75,8 @@ function MyForm() {
     Object.assign(userDto, user);
     userDto.img = imagePath;
     delete userDto.file;
-    // delete userDto.blob;
-    console.warn("userDto", userDto);
-
     const answer = await MainFetchApi.createUser(userDto);
-    console.warn("answer", answer);
+    console.log("answer for createUser:", answer);
   };
 
   const handleFind = async () => {
@@ -92,7 +88,7 @@ function MyForm() {
       return;
     } else {
       const foundUser = await MainFetchApi.getUser(user.email, user.password);
-      console.warn("foundUser", foundUser);
+      console.log("foundUser:", foundUser);
       if (foundUser) {
         foundUser.file = null;
         const parts = foundUser.img.split("\\");

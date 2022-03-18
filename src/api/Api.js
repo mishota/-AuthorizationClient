@@ -46,9 +46,7 @@ export const MainFetchApi = {
       },
     };
     const response = await fetch(`${url}/users/user`, options);
-    console.warn("response", response);
     const text = await response.text();
-    console.warn("text", text);
     const user = JSON.parse(text);
     return user;
   },
@@ -65,7 +63,6 @@ export const MainFetchApi = {
     };
     const response = await fetch(`${url}/users/create`, options);
     const answer = await response.json();
-    console.log("answer /users/create:", answer);
     return answer;
   },
 
@@ -84,7 +81,6 @@ export const MainFetchApi = {
     };
     const response = await fetch(`${url}/users/user`, options);
     const answer = await response.json();
-    console.log("answer /users/user:", answer);
     return answer;
   },
 
@@ -109,9 +105,8 @@ export const MainFetchApi = {
       },
     };
     const response = await fetch(`${url}/users/users`, options);
-    console.warn("response", response);
     const answer = await response.json();
-    console.warn("answer", answer);
+    console.warn("answer users:", answer);
     return answer;
   },
 };
