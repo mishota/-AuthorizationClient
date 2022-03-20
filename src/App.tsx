@@ -1,6 +1,6 @@
-import logo from "./logo.svg";
 import "./App.css";
 import MyForm from "./myForm/MyForm";
+import React from "react";
 
 function App() {
   return (

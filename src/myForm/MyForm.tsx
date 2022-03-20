@@ -1,29 +1,31 @@
-import React from "react";
+import React from 'react';
 import { useState } from "react";
-import { MainFetchApi, url } from "../api/Api";
 import "./MyForm.css";
+import UserType from '../models/userType'
+import { MainFetchApi, url } from '../api/Api'
 
-const initialUser = {
+const initialUser: UserType = {
   name: "",
   email: "",
   password: "",
   text: "",
-  img: null,
-  file: null,
+  img: "",
 };
-const refImage = React.createRef();
+
+const refImage = React.createRef<HTMLInputElement>();
 
 function MyForm() {
   const [user, setUser] = useState(initialUser);
   const [message, setMessage] = useState("");
 
-  const messageCreate = (text) => {
+  const messageCreate = (text: string) => {
     setMessage(text);
     setTimeout(() => {
       setMessage("");
     }, 2000);
   };
-  const handleChangeInput = (event) => {
+
+  const handleChangeInput = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (
       event.target.name === "img" &&
       event.target.files &&
@@ -33,19 +35,11 @@ function MyForm() {
         messageCreate("the image is too large (max-size: 5Mb)");
         return;
       }
-      let img = event.target.files[0];
+      let img: File = event.target.files[0];
       setUser({
         ...user,
         img: URL.createObjectURL(img),
         file: img,
-      });
-      return;
-    }
-    if (event.target.name === "text") {
-      const newText = event.target.value.replace(/\d/g, "");
-      setUser({
-        ...user,
-        text: newText,
       });
       return;
     }
@@ -55,23 +49,45 @@ function MyForm() {
     });
   };
 
-  const handleSubmit = async (imageForm) => {
-    for (let key in user) {
-      if (key !== "file") {
-        if (user[key] === "" || user[key] === null) {
-          messageCreate(`Please enter your ${key}`);
-          return;
-        }
-      }
+  const handleTextChangeInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = event.target.value.replace(/\d/g, "");
+    setUser({
+      ...user,
+      text: newText,
+    });
+    return;
+  }
+
+  const handleSubmit = async () => {
+    // const keys: Array<keyof UserType> = ['name', 'email', 'password', 'text'];
+    // keys.forEach((key, index) => {
+    //   if (user[key] === "") {
+    //     messageCreate(`Please enter your ${key}`);
+    //     // setValidate(false);
+    //     return;
+    //   }
+    // })
+    if (user.email === '') {
+      messageCreate(`Please enter your email`);
+      return;
     }
+    if (user.password === '') {
+      messageCreate(`Please enter your password`);
+      return;
+    }
+    if (!user.file) {
+      messageCreate(`Please choose Photo`);
+      return;
+    }
+
     const imagePath = await MainFetchApi.uploadFile(user);
-    if (!imagePath) {
+    if (imagePath?.includes('error')) {
       console.log("imagePath did not create");
       return;
     }
-    const userDto = {};
+    const userDto: UserType = initialUser;
     Object.assign(userDto, user);
-    userDto.img = imagePath;
+    if (imagePath) { userDto.img = imagePath; }
     delete userDto.file;
     const answer = await MainFetchApi.createUser(userDto);
     console.log("answer for createUser:", answer);
@@ -85,7 +101,6 @@ function MyForm() {
       const foundUser = await MainFetchApi.getUser(user.email, user.password);
       console.log("foundUser:", foundUser);
       if (foundUser) {
-        foundUser.file = null;
         const parts = foundUser.img.split("\\");
         const img = `${url}/users/user/image/${parts[parts.length - 1]}`;
         foundUser.img = img;
@@ -143,16 +158,16 @@ function MyForm() {
             name="text"
             value={user.text}
             rows={2}
-            onChange={handleChangeInput}
+            onChange={handleTextChangeInput}
           />
         </div>
         <div>
           {user.img !== null && (
             <div className="preview-image">
               <img src={user.img} alt="" />
-              {user.file !== null && (
+              {user.file !== null && user.file && (
                 <div className="preview-info">
-                  <div>Name: {user.file.name} /</div>
+                  <div>Name: {user.file?.name} /</div>
                   <div> Size: {Math.round(user.file.size / 9.54)} Mb</div>
                 </div>
               )}
