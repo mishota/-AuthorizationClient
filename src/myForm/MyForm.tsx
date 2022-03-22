@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from "react";
 import "./MyForm.css";
 import UserType from '../models/userType'
-import { MainFetchApi, url } from '../api/Api'
+import { MainFetchApi } from '../api/Api'
+import { useTypedSelector } from '../hooks/useTypedSelector';
+import { useActions } from '../hooks/useActions';
 
-const initialUser: UserType = {
+export const initialUser: UserType = {
   name: "",
   email: "",
   password: "",
@@ -14,9 +16,27 @@ const initialUser: UserType = {
 
 const refImage = React.createRef<HTMLInputElement>();
 
-function MyForm() {
-  const [user, setUser] = useState(initialUser);
+const MyForm: React.FC = () => {
+  const { user, isAuth } = useTypedSelector(state => state.auth);
+
+  const { fetchUser, fetchCreateUser } = useActions();
+
+  const [newUser, setUser] = useState(initialUser);
   const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    if (isAuth) {
+      if (user.email !== "" && user.password !== "") {
+        fetchUser(user.email, user.password);
+      }
+    }
+  }, [isAuth])
+
+  useEffect(() => {
+    if (user.email !== "" && user.password !== "") {
+      setUser(user);
+    }
+  }, [user])
 
   const messageCreate = (text: string) => {
     setMessage(text);
@@ -37,14 +57,14 @@ function MyForm() {
       }
       let img: File = event.target.files[0];
       setUser({
-        ...user,
+        ...newUser,
         img: URL.createObjectURL(img),
         file: img,
       });
       return;
     }
     setUser({
-      ...user,
+      ...newUser,
       [event.target.name]: event.target.value,
     });
   };
@@ -52,60 +72,45 @@ function MyForm() {
   const handleTextChangeInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newText = event.target.value.replace(/\d/g, "");
     setUser({
-      ...user,
+      ...newUser,
       text: newText,
     });
     return;
   }
 
   const handleSubmit = async () => {
-    // const keys: Array<keyof UserType> = ['name', 'email', 'password', 'text'];
-    // keys.forEach((key, index) => {
-    //   if (user[key] === "") {
-    //     messageCreate(`Please enter your ${key}`);
-    //     // setValidate(false);
-    //     return;
-    //   }
-    // })
-    if (user.email === '') {
+    if (newUser.email === '') {
       messageCreate(`Please enter your email`);
       return;
     }
-    if (user.password === '') {
+    if (newUser.password === '') {
       messageCreate(`Please enter your password`);
       return;
     }
-    if (!user.file) {
+    if (!newUser.file) {
       messageCreate(`Please choose Photo`);
       return;
     }
 
-    const imagePath = await MainFetchApi.uploadFile(user);
+    const imagePath = await MainFetchApi.uploadFile(newUser);
     if (imagePath?.includes('error')) {
       console.log("imagePath did not create");
       return;
     }
     const userDto: UserType = initialUser;
-    Object.assign(userDto, user);
+    Object.assign(userDto, newUser);
     if (imagePath) { userDto.img = imagePath; }
     delete userDto.file;
-    const answer = await MainFetchApi.createUser(userDto);
-    console.log("answer for createUser:", answer);
+    console.warn('userDto', userDto)
+    fetchCreateUser(userDto);
   };
 
   const handleFind = async () => {
-    if (user.email === "" || user.password === "") {
-      messageCreate(`Please enter your email anf password`);
+    if (newUser.email === "" || newUser.password === "") {
+      messageCreate(`Please enter your email and password`);
       return;
     } else {
-      const foundUser = await MainFetchApi.getUser(user.email, user.password);
-      console.log("foundUser:", foundUser);
-      if (foundUser) {
-        const parts = foundUser.img.split("\\");
-        const img = `${url}/users/user/image/${parts[parts.length - 1]}`;
-        foundUser.img = img;
-        setUser(foundUser);
-      }
+      fetchUser(newUser.email, newUser.password);
     }
   };
 
@@ -124,7 +129,7 @@ function MyForm() {
           <input
             type="text"
             name="name"
-            value={user.name}
+            value={newUser.name}
             onChange={handleChangeInput}
           />
         </div>
@@ -135,7 +140,7 @@ function MyForm() {
           <input
             type="text"
             name="email"
-            value={user.email}
+            value={newUser.email}
             onChange={handleChangeInput}
           />
         </div>
@@ -146,7 +151,7 @@ function MyForm() {
           <input
             type="password"
             name="password"
-            value={user.password}
+            value={newUser.password}
             onChange={handleChangeInput}
           />
         </div>
@@ -156,19 +161,19 @@ function MyForm() {
         <div>
           <textarea
             name="text"
-            value={user.text}
+            value={newUser.text}
             rows={2}
             onChange={handleTextChangeInput}
           />
         </div>
         <div>
-          {user.img !== null && (
+          {newUser.img !== null && (
             <div className="preview-image">
-              <img src={user.img} alt="" />
-              {user.file !== null && user.file && (
+              <img src={newUser.img} alt="" />
+              {newUser.file !== null && newUser.file && (
                 <div className="preview-info">
-                  <div>Name: {user.file?.name} /</div>
-                  <div> Size: {Math.round(user.file.size / 9.54)} Mb</div>
+                  <div>Name: {newUser.file?.name} /</div>
+                  <div> Size: {Math.round(newUser.file.size / 9.54)} Mb</div>
                 </div>
               )}
             </div>
@@ -191,19 +196,21 @@ function MyForm() {
             </div>
           </div>
         </div>
-        <div>
-          <input
-            type="button"
-            value="Submit"
-            className="submit"
-            onClick={handleSubmit}
-          />
-        </div>
+        {!isAuth &&
+          <div>
+            <input
+              type="button"
+              value="Register"
+              className="submit"
+              onClick={handleSubmit}
+            />
+          </div>
+        }
         {message !== "" && <label className="message">{message}</label>}
         <div>
           <input
             type="button"
-            value="Find"
+            value="Enter"
             className="submit"
             onClick={handleFind}
           />
